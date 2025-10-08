@@ -1,0 +1,56 @@
+{
+  "files": [
+    {
+      "id": "9d34",
+      "name": "25-26-Варианты",
+      "type": "xlsx",
+      "size": "17.74 KB",
+      "path": "blob:http://localhost:5173/a05a9ca9-da6e-41f6-98a6-f302bb31b3ea",
+      "uploadDate": "2025-09-25T09:56:58.007Z",
+      "isStarred": true,
+      "isDeleted": true
+    },
+    {
+      "id": "1759937902809",
+      "name": "Титульники",
+      "type": "docx",
+      "size": "44.1 KB",
+      "path": "blob:http://localhost:5173/24ad146a-5431-446a-8888-22285ca990d3",
+      "uploadDate": "2025-10-08T15:38:22.790Z",
+      "isStarred": true,
+      "isDeleted": true
+    },
+    {
+      "id": "1759937902810",
+      "name": "Старый отчет",
+      "type": "pdf",
+      "size": "1.2 MB",
+      "path": "blob:http://localhost:5173/some-other-blob-id",
+      "uploadDate": "2025-10-01T12:00:00.000Z",
+      "isStarred": true,
+      "isDeleted": false
+    },
+    {
+      "id": "1759966263809",
+      "name": "Титульники",
+      "type": "docx",
+      "size": "44.10 KB",
+      "path": "blob:http://localhost:5173/6cfebd55-9bf2-40ed-af02-7923ffcbf4e7",
+      "uploadDate": "2025-10-08T23:31:03.809Z",
+      "isStarred": false,
+      "isDeleted": false
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "name": "root"
+    }
+  ],
+  "folders": [
+    {
+      "id": "1",
+      "name": "Main"
+    }
+  ]
+}
