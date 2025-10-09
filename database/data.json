@@ -7,8 +7,8 @@
       "size": "17.74 KB",
       "path": "blob:http://localhost:5173/a05a9ca9-da6e-41f6-98a6-f302bb31b3ea",
       "uploadDate": "2025-09-25T09:56:58.007Z",
-      "isStarred": true,
-      "isDeleted": true
+      "isStarred": false,
+      "isDeleted": false
     },
     {
       "id": "1759937902809",
@@ -18,7 +18,7 @@
       "path": "blob:http://localhost:5173/24ad146a-5431-446a-8888-22285ca990d3",
       "uploadDate": "2025-10-08T15:38:22.790Z",
       "isStarred": true,
-      "isDeleted": true
+      "isDeleted": false
     },
     {
       "id": "1759937902810",

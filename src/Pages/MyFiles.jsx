@@ -1,26 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
-
+import React, { useState, useRef, useEffect } from "react";
+import { useFiles } from "../hooks/useFiles";
+import FileCard from "../components/FileCard";
 import { Modal } from "bootstrap";
 
-const MyFiles = () => {
-  const [files, setFiles] = useState([]);
+const MyFiles = ({ searchQuery }) => {
+  useEffect(() => {
+    document.title = "DISCOver - Мои файлы";
+  }, []);
+
+  const { files: allFiles, addFile, toggleStar, deleteFile } = useFiles();
   const [newFileName, setNewFileName] = useState("");
   const [fileToUpload, setFileToUpload] = useState(null);
   const addFileModalRef = useRef(null);
 
-  useEffect(() => {
-    fetchFiles();
-  }, []);
-
-  const fetchFiles = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/files");
-      setFiles(response.data.filter((file) => !file.isDeleted));
-    } catch (error) {
-      console.error("Error fetching files:", error);
-    }
-  };
+  const files = allFiles
+    .filter((file) => !file.isDeleted)
+    .filter((file) =>
+      file.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -48,38 +45,14 @@ const MyFiles = () => {
       isDeleted: false,
     };
 
-    try {
-      await axios.post("http://localhost:3000/files", newFile);
-      fetchFiles();
-      // Reset form
-      setNewFileName("");
-      setFileToUpload(null);
-      document.getElementById("addFileForm").reset();
-      const modal = Modal.getInstance(addFileModalRef.current);
-      modal.hide();
-    } catch (error) {
-      console.error("Error adding file:", error);
-    }
-  };
+    addFile(newFile);
 
-  const toggleStar = async (file) => {
-    try {
-      const updatedFile = { ...file, isStarred: !file.isStarred };
-      await axios.put(`http://localhost:3000/files/${file.id}`, updatedFile);
-      fetchFiles();
-    } catch (error) {
-      console.error("Error updating file:", error);
-    }
-  };
-
-  const deleteFile = async (file) => {
-    try {
-      const updatedFile = { ...file, isDeleted: true };
-      await axios.put(`http://localhost:3000/files/${file.id}`, updatedFile);
-      fetchFiles();
-    } catch (error) {
-      console.error("Error deleting file:", error);
-    }
+    // Reset form
+    setNewFileName("");
+    setFileToUpload(null);
+    document.getElementById("addFileForm").reset();
+    const modal = Modal.getInstance(addFileModalRef.current);
+    modal.hide();
   };
 
   return (
@@ -167,41 +140,12 @@ const MyFiles = () => {
 
       <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {files.map((file) => (
-          <div key={file.id} className="col">
-            <div className="card h-100 file-card d-flex flex-column">
-              <div className="card-body flex-grow-1">
-                <div className="d-flex justify-content-between align-items-start">
-                  <h5 className="card-title text-truncate">{file.name}</h5>
-                  <button
-                    className={`btn btn-sm ${
-                      file.isStarred ? "text-warning" : "text-light"
-                    }`}
-                    onClick={() => toggleStar(file)}
-                  >
-                    <i
-                      className={`bi ${
-                        file.isStarred ? "bi-star-fill" : "bi-star"
-                      }`}
-                    ></i>
-                  </button>
-                </div>
-                <p className="card-text text-muted">
-                  {file.size} - {new Date(file.uploadDate).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="card-footer bg-transparent border-top-0 d-flex justify-content-end gap-2 file-actions">
-                <button className="btn btn-sm text-light">
-                  <i className="bi bi-download"></i>
-                </button>
-                <button
-                  className="btn btn-sm text-danger"
-                  onClick={() => deleteFile(file)}
-                >
-                  <i className="bi bi-trash"></i>
-                </button>
-              </div>
-            </div>
-          </div>
+          <FileCard
+            key={file.id}
+            file={file}
+            toggleStar={toggleStar}
+            deleteFile={deleteFile}
+          />
         ))}
       </div>
     </main>

@@ -1,20 +1,20 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-const Navbar = () => {
+const Navbar = ({ searchQuery, setSearchQuery }) => {
   return (
     <header className="bg-primary py-3 shadow sticky-top">
       <div className="container">
         <nav className="navbar navbar-expand-lg navbar-dark">
           <div className="container-fluid">
-            <a className="navbar-brand d-flex align-items-center" href="/">
+            <NavLink className="navbar-brand d-flex align-items-center" to="/">
               <img
                 src="/images/logo.jpg"
                 alt="Логотип"
                 className="logo-img rounded-circle me-3"
               />
               <span>DISCOver</span>
-            </a>
+            </NavLink>
 
             <button
               className="navbar-toggler"
@@ -27,13 +27,13 @@ const Navbar = () => {
 
             <div className="collapse navbar-collapse" id="navbarContent">
               <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                <li className="nav-item">
-                  <a className="nav-link" href="/home.html">
+                <li className="nav-item mx-2">
+                  <NavLink className="nav-link" to="/">
                     <i className="bi bi-house-door me-1"></i> Главная
-                  </a>
+                  </NavLink>
                 </li>
 
-                <li className="nav-item dropdown">
+                <li className="nav-item dropdown mx-2">
                   <a
                     className="nav-link dropdown-toggle"
                     href="#"
@@ -45,27 +45,27 @@ const Navbar = () => {
                   </a>
                   <ul className="dropdown-menu dropdown-menu-dark">
                     <li>
-                      <NavLink className="dropdown-item" to="/myfiles.html">
+                      <NavLink className="dropdown-item" to="/my-files">
                         <i className="bi bi-files me-2"></i>Мои файлы
                       </NavLink>
                     </li>
                     <li>
-                      <NavLink className="dropdown-item" to="/starred.html">
+                      <NavLink className="dropdown-item" to="/starred">
                         <i className="bi bi-star me-2"></i>Избранное
                       </NavLink>
                     </li>
                     <li>
-                      <NavLink className="dropdown-item" to="/basket.html">
+                      <NavLink className="dropdown-item" to="/basket">
                         <i className="bi bi-trash me-2"></i>Корзина
                       </NavLink>
                     </li>
                   </ul>
                 </li>
 
-                <li className="nav-item">
-                  <a className="nav-link" href="/about.html">
+                <li className="nav-item mx-2">
+                  <NavLink className="nav-link" to="/about">
                     <i className="bi bi-info-circle me-1"></i> О нас
-                  </a>
+                  </NavLink>
                 </li>
               </ul>
 
@@ -75,6 +75,8 @@ const Navbar = () => {
                     type="text"
                     className="form-control bg-dark text-light border-secondary"
                     placeholder="Поиск..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   <button className="btn btn-outline-light" type="button">
                     <i className="bi bi-search"></i>
