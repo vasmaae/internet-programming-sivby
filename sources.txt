@@ -1,0 +1,1894 @@
+================================================================
+FILE: backend/src/main/java/com/budget/BudgetApplication.java
+================================================================
+package com.budget;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class BudgetApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(BudgetApplication.class, args);
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/config/WebConfig.java
+================================================================
+package com.budget.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("http://localhost:5173")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("*");
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/controller/AccountController.java
+================================================================
+package com.budget.controller;
+
+import com.budget.dto.AccountRequest;
+import com.budget.dto.AccountResponse;
+import com.budget.service.AccountService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/accounts")
+@RequiredArgsConstructor
+public class AccountController {
+
+    private final AccountService accountService;
+
+    @GetMapping
+    public List<AccountResponse> getAll() {
+        return accountService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public AccountResponse getById(@PathVariable Long id) {
+        return accountService.findById(id);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public AccountResponse create(@Valid @RequestBody AccountRequest dto) {
+        return accountService.create(dto);
+    }
+
+    @PutMapping("/{id}")
+    public AccountResponse update(@PathVariable Long id, @Valid @RequestBody AccountRequest dto) {
+        return accountService.update(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        accountService.delete(id);
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/controller/CategoryController.java
+================================================================
+package com.budget.controller;
+
+import com.budget.dto.CategoryRequest;
+import com.budget.dto.CategoryResponse;
+import com.budget.service.CategoryService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/categories")
+@RequiredArgsConstructor
+public class CategoryController {
+
+    private final CategoryService categoryService;
+
+    @GetMapping
+    public List<CategoryResponse> getAll(@RequestParam(required = false) Long accountId) {
+        if (accountId != null) {
+            return categoryService.findByAccountId(accountId);
+        }
+        return categoryService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public CategoryResponse getById(@PathVariable Long id) {
+        return categoryService.findById(id);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public CategoryResponse create(@Valid @RequestBody CategoryRequest dto) {
+        return categoryService.create(dto);
+    }
+
+    @PutMapping("/{id}")
+    public CategoryResponse update(@PathVariable Long id, @Valid @RequestBody CategoryRequest dto) {
+        return categoryService.update(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        categoryService.delete(id);
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/controller/TransactionController.java
+================================================================
+package com.budget.controller;
+
+import com.budget.dto.TransactionRequest;
+import com.budget.dto.TransactionResponse;
+import com.budget.service.TransactionService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/transactions")
+@RequiredArgsConstructor
+public class TransactionController {
+
+    private final TransactionService transactionService;
+
+    @GetMapping
+    public List<TransactionResponse> getAll(@RequestParam(required = false) Long accountId) {
+        if (accountId != null) {
+            return transactionService.findByAccountId(accountId);
+        }
+        return transactionService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public TransactionResponse getById(@PathVariable Long id) {
+        return transactionService.findById(id);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public TransactionResponse create(@Valid @RequestBody TransactionRequest dto) {
+        return transactionService.create(dto);
+    }
+
+    @PutMapping("/{id}")
+    public TransactionResponse update(@PathVariable Long id, @Valid @RequestBody TransactionRequest dto) {
+        return transactionService.update(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        transactionService.delete(id);
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/dto/AccountRequest.java
+================================================================
+package com.budget.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+
+import java.math.BigDecimal;
+
+@Data
+public class AccountRequest {
+
+    @NotBlank(message = "Название не может быть пустым")
+    private String name;
+
+    @NotNull(message = "Баланс обязателен")
+    private BigDecimal balance;
+
+    @NotBlank(message = "Валюта обязательна")
+    @Size(min = 1, max = 3, message = "Валюта: 1-3 символа")
+    private String currency;
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/dto/AccountResponse.java
+================================================================
+package com.budget.dto;
+
+import lombok.Data;
+
+import java.math.BigDecimal;
+
+@Data
+public class AccountResponse {
+    private Long id;
+    private String name;
+    private BigDecimal balance;
+    private String currency;
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/dto/CategoryRequest.java
+================================================================
+package com.budget.dto;
+
+import com.budget.entity.TransactionType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+@Data
+public class CategoryRequest {
+
+    @NotBlank(message = "Название не может быть пустым")
+    private String name;
+
+    @NotNull(message = "Тип обязателен")
+    private TransactionType type;
+
+    @NotNull(message = "Счёт обязателен")
+    private Long accountId;
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/dto/CategoryResponse.java
+================================================================
+package com.budget.dto;
+
+import com.budget.entity.TransactionType;
+import lombok.Data;
+
+@Data
+public class CategoryResponse {
+    private Long id;
+    private String name;
+    private TransactionType type;
+    private Long accountId;
+    private String accountName;
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/dto/TransactionRequest.java
+================================================================
+package com.budget.dto;
+
+import com.budget.entity.TransactionType;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Data
+public class TransactionRequest {
+
+    @NotNull(message = "Сумма обязательна")
+    @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0")
+    private BigDecimal amount;
+
+    private String description;
+
+    @NotNull(message = "Дата обязательна")
+    private LocalDate date;
+
+    @NotNull(message = "Тип обязателен")
+    private TransactionType type;
+
+    @NotNull(message = "Счёт обязателен")
+    private Long accountId;
+
+    private Long categoryId;
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/dto/TransactionResponse.java
+================================================================
+package com.budget.dto;
+
+import com.budget.entity.TransactionType;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Data
+public class TransactionResponse {
+    private Long id;
+    private BigDecimal amount;
+    private String description;
+    private LocalDate date;
+    private TransactionType type;
+    private Long accountId;
+    private String accountName;
+    private Long categoryId;
+    private String categoryName;
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/entity/Account.java
+================================================================
+package com.budget.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "accounts")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"categories", "transactions"})
+@EqualsAndHashCode(of = "id")
+public class Account {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private BigDecimal balance = BigDecimal.ZERO;
+
+    @Column(nullable = false, length = 3)
+    private String currency = "RUB";
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Category> categories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Transaction> transactions = new ArrayList<>();
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/entity/Category.java
+================================================================
+package com.budget.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "categories")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"account", "transactions"})
+@EqualsAndHashCode(of = "id")
+public class Category {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TransactionType type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
+    @OneToMany(mappedBy = "category")
+    private List<Transaction> transactions = new ArrayList<>();
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/entity/Transaction.java
+================================================================
+package com.budget.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "transactions")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"account", "category"})
+@EqualsAndHashCode(of = "id")
+public class Transaction {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private BigDecimal amount;
+
+    private String description;
+
+    @Column(nullable = false)
+    private LocalDate date;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TransactionType type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/entity/TransactionType.java
+================================================================
+package com.budget.entity;
+
+public enum TransactionType {
+    INCOME, EXPENSE
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/exception/GlobalExceptionHandler.java
+================================================================
+package com.budget.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
+            errors.put(fe.getField(), fe.getDefaultMessage());
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArg(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", ex.getMessage()));
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/exception/ResourceNotFoundException.java
+================================================================
+package com.budget.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/repository/AccountRepository.java
+================================================================
+package com.budget.repository;
+
+import com.budget.entity.Account;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AccountRepository extends JpaRepository<Account, Long> {
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/repository/CategoryRepository.java
+================================================================
+package com.budget.repository;
+
+import com.budget.entity.Category;
+import com.budget.entity.TransactionType;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface CategoryRepository extends JpaRepository<Category, Long> {
+    List<Category> findByAccountId(Long accountId);
+    List<Category> findByAccountIdAndType(Long accountId, TransactionType type);
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/repository/TransactionRepository.java
+================================================================
+package com.budget.repository;
+
+import com.budget.entity.Transaction;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+    List<Transaction> findByAccountIdOrderByDateDesc(Long accountId);
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/service/AccountService.java
+================================================================
+package com.budget.service;
+
+import com.budget.dto.AccountRequest;
+import com.budget.dto.AccountResponse;
+import com.budget.entity.Account;
+import com.budget.exception.ResourceNotFoundException;
+import com.budget.repository.AccountRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class AccountService {
+
+    private final AccountRepository accountRepository;
+
+    public List<AccountResponse> findAll() {
+        return accountRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public AccountResponse findById(Long id) {
+        return toResponse(getOrThrow(id));
+    }
+
+    @Transactional
+    public AccountResponse create(AccountRequest dto) {
+        Account account = new Account();
+        account.setName(dto.getName());
+        account.setBalance(dto.getBalance());
+        account.setCurrency(dto.getCurrency());
+        return toResponse(accountRepository.save(account));
+    }
+
+    @Transactional
+    public AccountResponse update(Long id, AccountRequest dto) {
+        Account account = getOrThrow(id);
+        account.setName(dto.getName());
+        account.setCurrency(dto.getCurrency());
+        return toResponse(accountRepository.save(account));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        accountRepository.delete(getOrThrow(id));
+    }
+
+    public Account getOrThrow(Long id) {
+        return accountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Счёт с id=" + id + " не найден"));
+    }
+
+    private AccountResponse toResponse(Account account) {
+        AccountResponse r = new AccountResponse();
+        r.setId(account.getId());
+        r.setName(account.getName());
+        r.setBalance(account.getBalance());
+        r.setCurrency(account.getCurrency());
+        return r;
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/service/CategoryService.java
+================================================================
+package com.budget.service;
+
+import com.budget.dto.CategoryRequest;
+import com.budget.dto.CategoryResponse;
+import com.budget.entity.Account;
+import com.budget.entity.Category;
+import com.budget.exception.ResourceNotFoundException;
+import com.budget.repository.CategoryRepository;
+import com.budget.repository.TransactionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class CategoryService {
+
+    private final CategoryRepository categoryRepository;
+    private final TransactionRepository transactionRepository;
+    private final AccountService accountService;
+
+    public List<CategoryResponse> findAll() {
+        return categoryRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public List<CategoryResponse> findByAccountId(Long accountId) {
+        return categoryRepository.findByAccountId(accountId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public CategoryResponse findById(Long id) {
+        return toResponse(getOrThrow(id));
+    }
+
+    @Transactional
+    public CategoryResponse create(CategoryRequest dto) {
+        Account account = accountService.getOrThrow(dto.getAccountId());
+        Category category = new Category();
+        category.setName(dto.getName());
+        category.setType(dto.getType());
+        category.setAccount(account);
+        return toResponse(categoryRepository.save(category));
+    }
+
+    @Transactional
+    public CategoryResponse update(Long id, CategoryRequest dto) {
+        Category category = getOrThrow(id);
+        Account account = accountService.getOrThrow(dto.getAccountId());
+        category.setName(dto.getName());
+        category.setType(dto.getType());
+        category.setAccount(account);
+        return toResponse(categoryRepository.save(category));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Category category = getOrThrow(id);
+        // Отвязываем транзакции от категории перед удалением
+        transactionRepository.findByAccountIdOrderByDateDesc(category.getAccount().getId())
+                .stream()
+                .filter(t -> category.equals(t.getCategory()))
+                .forEach(t -> {
+                    t.setCategory(null);
+                    transactionRepository.save(t);
+                });
+        categoryRepository.delete(category);
+    }
+
+    public Category getOrThrow(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Категория с id=" + id + " не найдена"));
+    }
+
+    private CategoryResponse toResponse(Category category) {
+        CategoryResponse r = new CategoryResponse();
+        r.setId(category.getId());
+        r.setName(category.getName());
+        r.setType(category.getType());
+        r.setAccountId(category.getAccount().getId());
+        r.setAccountName(category.getAccount().getName());
+        return r;
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/java/com/budget/service/TransactionService.java
+================================================================
+package com.budget.service;
+
+import com.budget.dto.TransactionRequest;
+import com.budget.dto.TransactionResponse;
+import com.budget.entity.Account;
+import com.budget.entity.Category;
+import com.budget.entity.Transaction;
+import com.budget.entity.TransactionType;
+import com.budget.exception.ResourceNotFoundException;
+import com.budget.repository.AccountRepository;
+import com.budget.repository.TransactionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class TransactionService {
+
+    private final TransactionRepository transactionRepository;
+    private final AccountRepository accountRepository;
+    private final AccountService accountService;
+    private final CategoryService categoryService;
+
+    public List<TransactionResponse> findAll() {
+        return transactionRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public List<TransactionResponse> findByAccountId(Long accountId) {
+        return transactionRepository.findByAccountIdOrderByDateDesc(accountId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public TransactionResponse findById(Long id) {
+        return toResponse(getOrThrow(id));
+    }
+
+    @Transactional
+    public TransactionResponse create(TransactionRequest dto) {
+        Account account = accountService.getOrThrow(dto.getAccountId());
+        Category category = dto.getCategoryId() != null
+                ? categoryService.getOrThrow(dto.getCategoryId())
+                : null;
+
+        if (category != null && !category.getType().equals(dto.getType())) {
+            throw new IllegalArgumentException("Тип категории не совпадает с типом транзакции");
+        }
+
+        Transaction transaction = new Transaction();
+        transaction.setAmount(dto.getAmount());
+        transaction.setDescription(dto.getDescription());
+        transaction.setDate(dto.getDate());
+        transaction.setType(dto.getType());
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+
+        applyBalanceChange(account, dto.getType(), dto.getAmount());
+        accountRepository.save(account);
+
+        return toResponse(transactionRepository.save(transaction));
+    }
+
+    @Transactional
+    public TransactionResponse update(Long id, TransactionRequest dto) {
+        Transaction transaction = getOrThrow(id);
+        Account oldAccount = transaction.getAccount();
+        Account newAccount = accountService.getOrThrow(dto.getAccountId());
+        Category category = dto.getCategoryId() != null
+                ? categoryService.getOrThrow(dto.getCategoryId())
+                : null;
+
+        if (category != null && !category.getType().equals(dto.getType())) {
+            throw new IllegalArgumentException("Тип категории не совпадает с типом транзакции");
+        }
+
+        // Откатываем старое изменение баланса
+        reverseBalanceChange(oldAccount, transaction.getType(), transaction.getAmount());
+        accountRepository.save(oldAccount);
+
+        // Применяем новое изменение баланса
+        applyBalanceChange(newAccount, dto.getType(), dto.getAmount());
+        accountRepository.save(newAccount);
+
+        transaction.setAmount(dto.getAmount());
+        transaction.setDescription(dto.getDescription());
+        transaction.setDate(dto.getDate());
+        transaction.setType(dto.getType());
+        transaction.setAccount(newAccount);
+        transaction.setCategory(category);
+
+        return toResponse(transactionRepository.save(transaction));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Transaction transaction = getOrThrow(id);
+        Account account = transaction.getAccount();
+        reverseBalanceChange(account, transaction.getType(), transaction.getAmount());
+        accountRepository.save(account);
+        transactionRepository.delete(transaction);
+    }
+
+    private void applyBalanceChange(Account account, TransactionType type, BigDecimal amount) {
+        if (type == TransactionType.INCOME) {
+            account.setBalance(account.getBalance().add(amount));
+        } else {
+            account.setBalance(account.getBalance().subtract(amount));
+        }
+    }
+
+    private void reverseBalanceChange(Account account, TransactionType type, BigDecimal amount) {
+        if (type == TransactionType.INCOME) {
+            account.setBalance(account.getBalance().subtract(amount));
+        } else {
+            account.setBalance(account.getBalance().add(amount));
+        }
+    }
+
+    private Transaction getOrThrow(Long id) {
+        return transactionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Транзакция с id=" + id + " не найдена"));
+    }
+
+    private TransactionResponse toResponse(Transaction t) {
+        TransactionResponse r = new TransactionResponse();
+        r.setId(t.getId());
+        r.setAmount(t.getAmount());
+        r.setDescription(t.getDescription());
+        r.setDate(t.getDate());
+        r.setType(t.getType());
+        r.setAccountId(t.getAccount().getId());
+        r.setAccountName(t.getAccount().getName());
+        if (t.getCategory() != null) {
+            r.setCategoryId(t.getCategory().getId());
+            r.setCategoryName(t.getCategory().getName());
+        }
+        return r;
+    }
+}
+
+
+================================================================
+FILE: backend/src/main/resources/application.properties
+================================================================
+spring.datasource.url=jdbc:h2:file:./data/budgetdb
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+server.port=8080
+
+
+================================================================
+FILE: backend/build.gradle
+================================================================
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.4'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.budget'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    runtimeOnly 'com.h2database:h2'
+    compileOnly 'org.projectlombok:lombok:1.18.38'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+
+================================================================
+FILE: backend/settings.gradle
+================================================================
+rootProject.name = 'budget-app'
+
+
+================================================================
+FILE: frontend/src/api/api.js
+================================================================
+const BASE = 'http://localhost:8080/api'
+
+async function request(path, options = {}) {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  })
+  if (res.status === 204) return null
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || JSON.stringify(data))
+  return data
+}
+
+// Accounts
+export const getAccounts = () => request('/accounts')
+export const createAccount = (body) => request('/accounts', { method: 'POST', body: JSON.stringify(body) })
+export const updateAccount = (id, body) => request(`/accounts/${id}`, { method: 'PUT', body: JSON.stringify(body) })
+export const deleteAccount = (id) => request(`/accounts/${id}`, { method: 'DELETE' })
+
+// Categories
+export const getCategories = (accountId) =>
+  request('/categories' + (accountId ? `?accountId=${accountId}` : ''))
+export const createCategory = (body) => request('/categories', { method: 'POST', body: JSON.stringify(body) })
+export const updateCategory = (id, body) => request(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(body) })
+export const deleteCategory = (id) => request(`/categories/${id}`, { method: 'DELETE' })
+
+// Transactions
+export const getTransactions = (accountId) =>
+  request('/transactions' + (accountId ? `?accountId=${accountId}` : ''))
+export const createTransaction = (body) => request('/transactions', { method: 'POST', body: JSON.stringify(body) })
+export const updateTransaction = (id, body) => request(`/transactions/${id}`, { method: 'PUT', body: JSON.stringify(body) })
+export const deleteTransaction = (id) => request(`/transactions/${id}`, { method: 'DELETE' })
+
+
+================================================================
+FILE: frontend/src/App.jsx
+================================================================
+import { useState } from 'react'
+import AccountsPage from './pages/AccountsPage'
+import CategoriesPage from './pages/CategoriesPage'
+import TransactionsPage from './pages/TransactionsPage'
+
+const TABS = [
+  { key: 'accounts', label: 'Счета' },
+  { key: 'categories', label: 'Категории' },
+  { key: 'transactions', label: 'Транзакции' },
+]
+
+export default function App() {
+  const [tab, setTab] = useState('accounts')
+
+  return (
+    <div className="app">
+      <header className="app-header">
+        <div className="app-title">Личный бюджет</div>
+        <nav className="app-nav">
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              className={`nav-btn${tab === t.key ? ' active' : ''}`}
+              onClick={() => setTab(t.key)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+      </header>
+      <main className="app-main">
+        {tab === 'accounts' && <AccountsPage />}
+        {tab === 'categories' && <CategoriesPage />}
+        {tab === 'transactions' && <TransactionsPage />}
+      </main>
+    </div>
+  )
+}
+
+
+================================================================
+FILE: frontend/src/index.css
+================================================================
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f2f5;
+  color: #222;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ── Layout ── */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: #1a1a2e;
+  color: #fff;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  height: 56px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  white-space: nowrap;
+}
+
+.app-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,.7);
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background .15s, color .15s;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,.1);
+  color: #fff;
+}
+
+.nav-btn.active {
+  background: rgba(255,255,255,.18);
+  color: #fff;
+}
+
+.app-main {
+  flex: 1;
+  padding: 28px 32px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Page header ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.page-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* ── Buttons ── */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 7px 14px;
+  transition: opacity .15s, background .15s;
+}
+
+button:hover { opacity: .88; }
+
+.btn-primary {
+  background: #4361ee;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #e8eaf0;
+  color: #444;
+}
+
+.btn-danger {
+  background: #e63946;
+  color: #fff;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+/* ── Table ── */
+.table-wrap {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead tr {
+  background: #f7f8fc;
+}
+
+th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #e8eaf0;
+}
+
+td {
+  padding: 11px 16px;
+  border-bottom: 1px solid #f0f2f5;
+  font-size: 14px;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+
+tbody tr:hover { background: #fafbff; }
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-income {
+  background: #d4edda;
+  color: #176d31;
+}
+
+.badge-expense {
+  background: #fde8e8;
+  color: #b91c1c;
+}
+
+.amount-income { color: #176d31; font-weight: 600; }
+.amount-expense { color: #b91c1c; font-weight: 600; }
+
+/* ── Filter bar ── */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.filter-bar label {
+  font-size: 14px;
+  color: #555;
+}
+
+/* ── Form controls ── */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+input, select, textarea {
+  padding: 8px 12px;
+  border: 1px solid #d0d5e0;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  background: #fff;
+  color: #222;
+  transition: border-color .15s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #4361ee;
+  box-shadow: 0 0 0 3px rgba(67,97,238,.12);
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px;
+  width: 420px;
+  max-width: 95vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18);
+}
+
+.modal h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* ── Empty state ── */
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 14px;
+}
+
+/* ── Error ── */
+.error-msg {
+  color: #b91c1c;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+
+================================================================
+FILE: frontend/src/main.jsx
+================================================================
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+
+================================================================
+FILE: frontend/src/pages/AccountsPage.jsx
+================================================================
+import { useState, useEffect } from 'react'
+import { getAccounts, createAccount, updateAccount, deleteAccount } from '../api/api'
+
+const EMPTY = { name: '', balance: '', currency: 'RUB' }
+
+export default function AccountsPage() {
+  const [accounts, setAccounts] = useState([])
+  const [form, setForm] = useState(EMPTY)
+  const [editId, setEditId] = useState(null)
+  const [showForm, setShowForm] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => { load() }, [])
+
+  const load = () => getAccounts().then(setAccounts).catch(() => {})
+
+  const openCreate = () => { setForm(EMPTY); setEditId(null); setError(''); setShowForm(true) }
+  const openEdit = (a) => {
+    setForm({ name: a.name, balance: String(a.balance), currency: a.currency })
+    setEditId(a.id); setError(''); setShowForm(true)
+  }
+  const close = () => setShowForm(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    try {
+      const body = { ...form, balance: parseFloat(form.balance) }
+      if (editId) await updateAccount(editId, body)
+      else await createAccount(body)
+      close(); load()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Удалить счёт? Все категории и транзакции счёта также будут удалены.')) return
+    await deleteAccount(id).catch(() => {})
+    load()
+  }
+
+  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Счета</h2>
+        <button className="btn-primary" onClick={openCreate}>+ Добавить счёт</button>
+      </div>
+
+      {showForm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>{editId ? 'Редактировать счёт' : 'Новый счёт'}</h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-field">
+                <label>Название *</label>
+                <input value={form.name} onChange={set('name')} required placeholder="Например: Основная карта" />
+              </div>
+              <div className="form-field">
+                <label>Начальный баланс *</label>
+                <input type="number" step="0.01" value={form.balance} onChange={set('balance')} required placeholder="0.00" />
+              </div>
+              <div className="form-field">
+                <label>Валюта *</label>
+                <input value={form.currency} onChange={set('currency')} required maxLength={3} placeholder="RUB" />
+              </div>
+              {error && <div className="error-msg">{error}</div>}
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={close}>Отмена</button>
+                <button type="submit" className="btn-primary">Сохранить</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="table-wrap">
+        {accounts.length === 0 ? (
+          <div className="empty">Счетов нет. Добавьте первый счёт.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Баланс</th>
+                <th>Валюта</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {accounts.map(a => (
+                <tr key={a.id}>
+                  <td>{a.name}</td>
+                  <td>
+                    <span className={a.balance >= 0 ? 'amount-income' : 'amount-expense'}>
+                      {Number(a.balance).toFixed(2)}
+                    </span>
+                  </td>
+                  <td>{a.currency}</td>
+                  <td>
+                    <div className="actions">
+                      <button className="btn-secondary btn-sm" onClick={() => openEdit(a)}>Изменить</button>
+                      <button className="btn-danger btn-sm" onClick={() => handleDelete(a.id)}>Удалить</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
+================================================================
+FILE: frontend/src/pages/CategoriesPage.jsx
+================================================================
+import { useState, useEffect } from 'react'
+import { getAccounts } from '../api/api'
+import { getCategories, createCategory, updateCategory, deleteCategory } from '../api/api'
+
+const EMPTY = { name: '', type: 'EXPENSE', accountId: '' }
+
+export default function CategoriesPage() {
+  const [categories, setCategories] = useState([])
+  const [accounts, setAccounts] = useState([])
+  const [filterAccountId, setFilterAccountId] = useState('')
+  const [form, setForm] = useState(EMPTY)
+  const [editId, setEditId] = useState(null)
+  const [showForm, setShowForm] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    getAccounts().then(data => {
+      setAccounts(data)
+      if (data.length > 0) setFilterAccountId(String(data[0].id))
+    })
+  }, [])
+
+  useEffect(() => { load() }, [filterAccountId])
+
+  const load = () => {
+    getCategories(filterAccountId || null).then(setCategories).catch(() => {})
+  }
+
+  const openCreate = () => {
+    setForm({ ...EMPTY, accountId: filterAccountId || (accounts[0]?.id ? String(accounts[0].id) : '') })
+    setEditId(null); setError(''); setShowForm(true)
+  }
+  const openEdit = (c) => {
+    setForm({ name: c.name, type: c.type, accountId: String(c.accountId) })
+    setEditId(c.id); setError(''); setShowForm(true)
+  }
+  const close = () => setShowForm(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    try {
+      const body = { ...form, accountId: Number(form.accountId) }
+      if (editId) await updateCategory(editId, body)
+      else await createCategory(body)
+      close(); load()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Удалить категорию?')) return
+    await deleteCategory(id).catch(() => {})
+    load()
+  }
+
+  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Категории</h2>
+        <button className="btn-primary" onClick={openCreate} disabled={accounts.length === 0}>
+          + Добавить категорию
+        </button>
+      </div>
+
+      <div className="filter-bar">
+        <label>Счёт:</label>
+        <select value={filterAccountId} onChange={e => setFilterAccountId(e.target.value)} style={{ width: 200 }}>
+          <option value="">Все</option>
+          {accounts.map(a => (
+            <option key={a.id} value={a.id}>{a.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {showForm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>{editId ? 'Редактировать категорию' : 'Новая категория'}</h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-field">
+                <label>Название *</label>
+                <input value={form.name} onChange={set('name')} required placeholder="Например: Продукты" />
+              </div>
+              <div className="form-field">
+                <label>Тип *</label>
+                <select value={form.type} onChange={set('type')}>
+                  <option value="EXPENSE">Расход</option>
+                  <option value="INCOME">Доход</option>
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Счёт *</label>
+                <select value={form.accountId} onChange={set('accountId')} required>
+                  <option value="">— выберите —</option>
+                  {accounts.map(a => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
+              </div>
+              {error && <div className="error-msg">{error}</div>}
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={close}>Отмена</button>
+                <button type="submit" className="btn-primary">Сохранить</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="table-wrap">
+        {categories.length === 0 ? (
+          <div className="empty">Категорий нет.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Тип</th>
+                <th>Счёт</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map(c => (
+                <tr key={c.id}>
+                  <td>{c.name}</td>
+                  <td>
+                    <span className={`badge badge-${c.type === 'INCOME' ? 'income' : 'expense'}`}>
+                      {c.type === 'INCOME' ? 'Доход' : 'Расход'}
+                    </span>
+                  </td>
+                  <td>{c.accountName}</td>
+                  <td>
+                    <div className="actions">
+                      <button className="btn-secondary btn-sm" onClick={() => openEdit(c)}>Изменить</button>
+                      <button className="btn-danger btn-sm" onClick={() => handleDelete(c.id)}>Удалить</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
+================================================================
+FILE: frontend/src/pages/TransactionsPage.jsx
+================================================================
+import { useState, useEffect } from 'react'
+import { getAccounts, getCategories, getTransactions, createTransaction, updateTransaction, deleteTransaction } from '../api/api'
+
+const today = () => new Date().toISOString().slice(0, 10)
+const EMPTY = { amount: '', description: '', date: today(), type: 'EXPENSE', accountId: '', categoryId: '' }
+
+export default function TransactionsPage() {
+  const [transactions, setTransactions] = useState([])
+  const [accounts, setAccounts] = useState([])
+  const [categories, setCategories] = useState([])
+  const [filterAccountId, setFilterAccountId] = useState('')
+  const [form, setForm] = useState(EMPTY)
+  const [editId, setEditId] = useState(null)
+  const [showForm, setShowForm] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    getAccounts().then(data => {
+      setAccounts(data)
+      if (data.length > 0) setFilterAccountId(String(data[0].id))
+    })
+  }, [])
+
+  useEffect(() => { loadTransactions() }, [filterAccountId])
+
+  useEffect(() => {
+    if (form.accountId) {
+      getCategories(form.accountId).then(all =>
+        setCategories(all.filter(c => c.type === form.type))
+      )
+    } else {
+      setCategories([])
+    }
+  }, [form.accountId, form.type])
+
+  const loadTransactions = () => {
+    getTransactions(filterAccountId || null).then(setTransactions).catch(() => {})
+  }
+
+  const openCreate = () => {
+    const defaultAccount = filterAccountId || (accounts[0]?.id ? String(accounts[0].id) : '')
+    setForm({ ...EMPTY, date: today(), accountId: defaultAccount })
+    setEditId(null); setError(''); setShowForm(true)
+  }
+
+  const openEdit = (t) => {
+    setForm({
+      amount: String(t.amount),
+      description: t.description || '',
+      date: t.date,
+      type: t.type,
+      accountId: String(t.accountId),
+      categoryId: t.categoryId ? String(t.categoryId) : '',
+    })
+    setEditId(t.id); setError(''); setShowForm(true)
+  }
+
+  const close = () => setShowForm(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    try {
+      const body = {
+        amount: parseFloat(form.amount),
+        description: form.description || null,
+        date: form.date,
+        type: form.type,
+        accountId: Number(form.accountId),
+        categoryId: form.categoryId ? Number(form.categoryId) : null,
+      }
+      if (editId) await updateTransaction(editId, body)
+      else await createTransaction(body)
+      close(); loadTransactions()
+      // Обновляем счета (балансы могли измениться)
+      getAccounts().then(setAccounts)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Удалить транзакцию?')) return
+    await deleteTransaction(id).catch(() => {})
+    loadTransactions()
+    getAccounts().then(setAccounts)
+  }
+
+  const set = (field) => (e) => {
+    const val = e.target.value
+    setForm(f => {
+      const next = { ...f, [field]: val }
+      // Сбрасываем категорию при смене типа или счёта
+      if (field === 'type' || field === 'accountId') next.categoryId = ''
+      return next
+    })
+  }
+
+  const formatAmount = (t) => {
+    const sign = t.type === 'INCOME' ? '+' : '−'
+    return (
+      <span className={t.type === 'INCOME' ? 'amount-income' : 'amount-expense'}>
+        {sign}{Number(t.amount).toFixed(2)}
+      </span>
+    )
+  }
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Транзакции</h2>
+        <button className="btn-primary" onClick={openCreate} disabled={accounts.length === 0}>
+          + Добавить транзакцию
+        </button>
+      </div>
+
+      <div className="filter-bar">
+        <label>Счёт:</label>
+        <select value={filterAccountId} onChange={e => setFilterAccountId(e.target.value)} style={{ width: 200 }}>
+          <option value="">Все</option>
+          {accounts.map(a => (
+            <option key={a.id} value={a.id}>{a.name} ({Number(a.balance).toFixed(2)} {a.currency})</option>
+          ))}
+        </select>
+      </div>
+
+      {showForm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>{editId ? 'Редактировать транзакцию' : 'Новая транзакция'}</h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-field">
+                <label>Тип *</label>
+                <select value={form.type} onChange={set('type')}>
+                  <option value="EXPENSE">Расход</option>
+                  <option value="INCOME">Доход</option>
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Счёт *</label>
+                <select value={form.accountId} onChange={set('accountId')} required>
+                  <option value="">— выберите —</option>
+                  {accounts.map(a => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Сумма *</label>
+                <input type="number" step="0.01" min="0.01" value={form.amount} onChange={set('amount')} required placeholder="0.00" />
+              </div>
+              <div className="form-field">
+                <label>Дата *</label>
+                <input type="date" value={form.date} onChange={set('date')} required />
+              </div>
+              <div className="form-field">
+                <label>Категория</label>
+                <select value={form.categoryId} onChange={set('categoryId')} disabled={!form.accountId}>
+                  <option value="">— без категории —</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Описание</label>
+                <input value={form.description} onChange={set('description')} placeholder="Необязательно" />
+              </div>
+              {error && <div className="error-msg">{error}</div>}
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={close}>Отмена</button>
+                <button type="submit" className="btn-primary">Сохранить</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="table-wrap">
+        {transactions.length === 0 ? (
+          <div className="empty">Транзакций нет.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Сумма</th>
+                <th>Тип</th>
+                <th>Категория</th>
+                <th>Описание</th>
+                <th>Счёт</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map(t => (
+                <tr key={t.id}>
+                  <td>{t.date}</td>
+                  <td>{formatAmount(t)}</td>
+                  <td>
+                    <span className={`badge badge-${t.type === 'INCOME' ? 'income' : 'expense'}`}>
+                      {t.type === 'INCOME' ? 'Доход' : 'Расход'}
+                    </span>
+                  </td>
+                  <td>{t.categoryName || <span style={{ color: '#aaa' }}>—</span>}</td>
+                  <td>{t.description || <span style={{ color: '#aaa' }}>—</span>}</td>
+                  <td>{t.accountName}</td>
+                  <td>
+                    <div className="actions">
+                      <button className="btn-secondary btn-sm" onClick={() => openEdit(t)}>Изменить</button>
+                      <button className="btn-danger btn-sm" onClick={() => handleDelete(t.id)}>Удалить</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
+================================================================
+FILE: frontend/index.html
+================================================================
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Личный бюджет</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+
+================================================================
+FILE: frontend/vite.config.js
+================================================================
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 5173,
+  },
+})
+
+
+================================================================
+FILE: frontend/package.json
+================================================================
+{
+  "name": "budget-frontend",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.2.0"
+  }
+}
+
+
