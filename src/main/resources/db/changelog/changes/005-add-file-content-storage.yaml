@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-add-file-content-storage
+      author: codex
+      changes:
+        - addColumn:
+            tableName: stored_files
+            columns:
+              - column:
+                  name: mime_type
+                  type: VARCHAR(150)
+              - column:
+                  name: content_base64
+                  type: CLOB

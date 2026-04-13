@@ -1,0 +1,6 @@
+spring:
+  profiles:
+    include: dev
+  web:
+    resources:
+      static-locations: classpath:/static/

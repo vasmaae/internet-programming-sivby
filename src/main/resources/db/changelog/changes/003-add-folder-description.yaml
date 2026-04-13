@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-add-folder-description-column
+      author: codex
+      changes:
+        - addColumn:
+            tableName: folders
+            columns:
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+  - changeSet:
+      id: 003-fill-folder-description
+      author: codex
+      changes:
+        - update:
+            tableName: folders
+            columns:
+              - column: { name: description, value: Основное рабочее пространство }
+            where: id = 1
+        - update:
+            tableName: folders
+            columns:
+              - column: { name: description, value: Учебные и отчетные документы }
+            where: id = 2
+        - update:
+            tableName: folders
+            columns:
+              - column: { name: description, value: Архивные материалы }
+            where: id = 3

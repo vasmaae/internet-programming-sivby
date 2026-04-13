@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-reset-h2-identities
+      author: codex
+      dbms: h2
+      changes:
+        - sql:
+            sql: ALTER TABLE users ALTER COLUMN id RESTART WITH 100;
+        - sql:
+            sql: ALTER TABLE folders ALTER COLUMN id RESTART WITH 100;
+        - sql:
+            sql: ALTER TABLE stored_files ALTER COLUMN id RESTART WITH 100;
+  - changeSet:
+      id: 004-reset-postgres-sequences
+      author: codex
+      dbms: postgresql
+      changes:
+        - sql:
+            sql: ALTER SEQUENCE users_id_seq RESTART WITH 100;
+        - sql:
+            sql: ALTER SEQUENCE folders_id_seq RESTART WITH 100;
+        - sql:
+            sql: ALTER SEQUENCE stored_files_id_seq RESTART WITH 100;

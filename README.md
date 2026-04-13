@@ -1,16 +1,46 @@
-# React + Vite
+# КАК ЗАПУСКАТЬ
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Из корня проекта.
 
-Currently, two official plugins are available:
+Тесты:
+- `./gradlew test`
+- `./gradlew clean test`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Запуск backend:
+- `./gradlew bootRun`
+- `./gradlew bootRun -Dspring.profiles.active=dev`
 
-## React Compiler
+Запуск backend с `prod`:
+- `./gradlew bootRun -Dspring.profiles.active=prod`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Запуск frontend отдельно:
+- `cd frontend`
+- `npm install`
+- `npm run dev`
 
-## Expanding the ESLint configuration
+Запуск всего в режиме разработки:
+- Терминал 1: `./gradlew bootRun`
+- Терминал 2: `cd frontend && npm run dev`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Сборка backend:
+- `./gradlew build`
+- `./gradlew bootJar`
+
+Сборка единого jar с frontend внутри:
+- `./gradlew -PappProfile=front bootJar`
+
+Запуск собранного jar:
+- `java -jar build/libs/internet-programming-sivby-0.0.1-SNAPSHOT.jar`
+
+Запуск jar с профилем `dev`:
+- `java -jar build/libs/internet-programming-sivby-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev`
+
+Запуск jar с профилем `prod`:
+- `java -jar build/libs/internet-programming-sivby-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod`
+
+Liquibase:
+- `./gradlew update`
+- `./gradlew migrationStatus`
+- `./gradlew migrationRollbackOne -PliquibaseCommandValue=1`
+- `./gradlew migrationGenerateChangelog`
+- `./gradlew migrationDiff`

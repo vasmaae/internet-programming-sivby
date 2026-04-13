@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-fix-file-content-column-type
+      author: codex
+      changes:
+        - modifyDataType:
+            tableName: stored_files
+            columnName: content_base64
+            newDataType: TEXT

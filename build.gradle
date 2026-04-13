@@ -1,0 +1,132 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.4'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.liquibase.gradle' version '2.2.2'
+}
+
+group = 'ru.ulstu'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+def activeProfile = (findProperty('appProfile') ?: 'dev').toString()
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    liquibaseRuntime.extendsFrom runtimeClasspath
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.liquibase:liquibase-core'
+
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    liquibaseRuntime 'org.liquibase:liquibase-core'
+    liquibaseRuntime 'com.h2database:h2'
+    liquibaseRuntime 'org.postgresql:postgresql'
+    liquibaseRuntime sourceSets.main.output
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    systemProperty 'spring.profiles.active', 'test'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+bootRun {
+    systemProperty 'spring.profiles.active', activeProfile
+}
+
+def npmCommand = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'npm.cmd' : 'npm'
+
+tasks.register('npmInstall', Exec) {
+    workingDir = file('frontend')
+    commandLine npmCommand, 'install'
+    inputs.file('frontend/package-lock.json')
+    inputs.file('frontend/package.json')
+    outputs.dir('frontend/node_modules')
+}
+
+tasks.register('npmBuild', Exec) {
+    dependsOn 'npmInstall'
+    workingDir = file('frontend')
+    commandLine npmCommand, 'run', 'build'
+    inputs.dir('frontend/src')
+    inputs.dir('frontend/public')
+    inputs.file('frontend/package.json')
+    inputs.file('frontend/package-lock.json')
+    inputs.file('frontend/vite.config.js')
+    outputs.dir('frontend/dist')
+}
+
+tasks.register('copyFrontendBuild', Copy) {
+    dependsOn 'npmBuild'
+    from 'frontend/dist'
+    into layout.buildDirectory.dir('resources/main/static')
+}
+
+tasks.named('processResources') {
+    if (activeProfile == 'front') {
+        dependsOn 'copyFrontendBuild'
+    }
+}
+
+liquibase {
+    activities {
+        dev {
+            changeLogFile 'src/main/resources/db/changelog/db.changelog-master.yaml'
+            url 'jdbc:h2:file:./build/db/dev-cloud-storage'
+            username 'sa'
+            password ''
+            driver 'org.h2.Driver'
+        }
+        prod {
+            changeLogFile 'src/main/resources/db/changelog/db.changelog-master.yaml'
+            url System.getenv('PROD_DB_URL') ?: 'jdbc:postgresql://localhost:5432/cloud_storage'
+            username System.getenv('PROD_DB_USERNAME') ?: 'cloud'
+            password System.getenv('PROD_DB_PASSWORD') ?: 'cloud'
+            driver 'org.postgresql.Driver'
+        }
+    }
+    runList = (findProperty('liquibaseProfile') ?: (activeProfile == 'prod' ? 'prod' : 'dev'))
+}
+
+tasks.register('migrationStatus') {
+    group = 'liquibase'
+    dependsOn 'status'
+}
+
+tasks.register('migrationRollbackOne') {
+    group = 'liquibase'
+    doFirst {
+        project.ext.set('liquibaseCommandValue', '1')
+    }
+    dependsOn 'rollbackCount'
+}
+
+tasks.register('migrationDiff') {
+    group = 'liquibase'
+    dependsOn 'diffChangelog'
+}
+
+tasks.register('migrationGenerateChangelog') {
+    group = 'liquibase'
+    dependsOn 'generateChangelog'
+}

@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-create-core-tables.yaml
+  - include:
+      file: db/changelog/changes/002-seed-demo-data.yaml
+  - include:
+      file: db/changelog/changes/003-add-folder-description.yaml
+  - include:
+      file: db/changelog/changes/004-reset-identity-counters.yaml
+  - include:
+      file: db/changelog/changes/005-add-file-content-storage.yaml
+  - include:
+      file: db/changelog/changes/006-fix-file-content-column-type.yaml

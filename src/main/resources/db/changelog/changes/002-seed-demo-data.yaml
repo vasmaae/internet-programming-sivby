@@ -1,0 +1,91 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-seed-users
+      author: codex
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: id, valueNumeric: 1 }
+              - column: { name: username, value: root }
+              - column: { name: email, value: root@discover-cloud.local }
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: id, valueNumeric: 2 }
+              - column: { name: username, value: demo }
+              - column: { name: email, value: demo@discover-cloud.local }
+  - changeSet:
+      id: 002-seed-folders
+      author: codex
+      changes:
+        - insert:
+            tableName: folders
+            columns:
+              - column: { name: id, valueNumeric: 1 }
+              - column: { name: name, value: Main }
+              - column: { name: owner_id, valueNumeric: 1 }
+        - insert:
+            tableName: folders
+            columns:
+              - column: { name: id, valueNumeric: 2 }
+              - column: { name: name, value: Reports }
+              - column: { name: owner_id, valueNumeric: 1 }
+        - insert:
+            tableName: folders
+            columns:
+              - column: { name: id, valueNumeric: 3 }
+              - column: { name: name, value: Archive }
+              - column: { name: owner_id, valueNumeric: 2 }
+  - changeSet:
+      id: 002-seed-files
+      author: codex
+      changes:
+        - insert:
+            tableName: stored_files
+            columns:
+              - column: { name: id, valueNumeric: 1 }
+              - column: { name: name, value: 25-26-Варианты }
+              - column: { name: extension, value: xlsx }
+              - column: { name: size_bytes, valueNumeric: 18166 }
+              - column: { name: storage_path, value: /seed/25-26-variants.xlsx }
+              - column: { name: uploaded_at, valueDate: 2025-09-25T09:56:58 }
+              - column: { name: starred, valueBoolean: false }
+              - column: { name: deleted, valueBoolean: false }
+              - column: { name: folder_id, valueNumeric: 1 }
+        - insert:
+            tableName: stored_files
+            columns:
+              - column: { name: id, valueNumeric: 2 }
+              - column: { name: name, value: Титульники }
+              - column: { name: extension, value: docx }
+              - column: { name: size_bytes, valueNumeric: 45158 }
+              - column: { name: storage_path, value: /seed/title-pages.docx }
+              - column: { name: uploaded_at, valueDate: 2025-10-08T15:38:22 }
+              - column: { name: starred, valueBoolean: true }
+              - column: { name: deleted, valueBoolean: false }
+              - column: { name: folder_id, valueNumeric: 2 }
+        - insert:
+            tableName: stored_files
+            columns:
+              - column: { name: id, valueNumeric: 3 }
+              - column: { name: name, value: Старый отчет }
+              - column: { name: extension, value: pdf }
+              - column: { name: size_bytes, valueNumeric: 1258291 }
+              - column: { name: storage_path, value: /seed/old-report.pdf }
+              - column: { name: uploaded_at, valueDate: 2025-10-01T12:00:00 }
+              - column: { name: starred, valueBoolean: true }
+              - column: { name: deleted, valueBoolean: false }
+              - column: { name: folder_id, valueNumeric: 2 }
+        - insert:
+            tableName: stored_files
+            columns:
+              - column: { name: id, valueNumeric: 4 }
+              - column: { name: name, value: Черновик презентации }
+              - column: { name: extension, value: pptx }
+              - column: { name: size_bytes, valueNumeric: 832431 }
+              - column: { name: storage_path, value: /seed/draft-presentation.pptx }
+              - column: { name: uploaded_at, valueDate: 2025-10-08T23:31:03 }
+              - column: { name: starred, valueBoolean: false }
+              - column: { name: deleted, valueBoolean: true }
+              - column: { name: folder_id, valueNumeric: 3 }
