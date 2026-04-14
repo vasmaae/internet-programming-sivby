@@ -183,7 +183,7 @@ CR ||--o{ TR : "0..N"
 
 ### 1.2 Интерфейс пользователя
 
-Клиентская часть реализована как одностраничное приложение (SPA) на React 18. Навигация между разделами осуществляется через переключение активной вкладки в верхней панели без перезагрузки страницы. Состояние активной вкладки хранится в корневом компоненте `App`.
+Клиентская часть реализована как одностраничное приложение (SPA) на React 18 с использованием библиотеки React Router DOM 7. Навигация между разделами осуществляется через ссылки в верхней панели; при переходе URL в адресной строке браузера изменяется без перезагрузки страницы. Маршрутизация настроена в корневом компоненте `App` с помощью `<Routes>` и `<Route>`.
 
 #### Страницы приложения
 
@@ -203,39 +203,54 @@ CR ||--o{ TR : "0..N"
 
 [СКРИНШОТ: модальное окно создания транзакции]
 
-#### Схема навигации клиентской части
+#### Схема маршрутизации клиентской части
 
 ```plantuml
-@startuml Схема навигации
+@startuml Схема маршрутизации
 skinparam rectangle {
   BackgroundColor #f0f2f5
   BorderColor #4361ee
 }
-
-rectangle "App" as App {
-  rectangle "Шапка (Header)" as H {
-    rectangle "[вкладка] Счета" as T1
-    rectangle "[вкладка] Категории" as T2
-    rectangle "[вкладка] Транзакции" as T3
-  }
-  rectangle "Основная область (Main)" as M
+skinparam arrow {
+  Color #4361ee
 }
 
-T1 --> M : AccountsPage
-T2 --> M : CategoriesPage
-T3 --> M : TransactionsPage
+rectangle "BrowserRouter" {
+  rectangle "App" {
+    rectangle "Header\n(NavLink × 3)" as Nav
+    rectangle "Routes" as R {
+      rectangle "/ → redirect" as R0
+      rectangle "/accounts" as R1
+      rectangle "/categories" as R2
+      rectangle "/transactions" as R3
+    }
+  }
+}
+
+Nav --> R1 : /accounts
+Nav --> R2 : /categories
+Nav --> R3 : /transactions
+R0 --> R1 : Navigate replace
 @enduml
 ```
 
-*Рисунок 1.2.1 — Схема навигации клиентской части*
+*Рисунок 1.2.1 — Схема маршрутизации клиентской части*
 
-Навигация реализована без использования React Router — активная страница определяется состоянием (`useState`) в корневом компоненте `App`. Такой подход достаточен для приложения без необходимости в прямых URL-ссылках на разделы.
+Маршрутизация реализована с помощью React Router DOM 7. `BrowserRouter` оборачивает всё приложение в `main.jsx` и обеспечивает работу с History API браузера. В `App.jsx` объявлены маршруты через `<Routes>` / `<Route>`. Для навигации используется компонент `<NavLink>`, который автоматически добавляет класс `active` к активной ссылке. Корневой маршрут `/` перенаправляет на `/accounts` через `<Navigate replace />`.
+
+| Маршрут | Компонент | Описание |
+|---|---|---|
+| `/` | — | Редирект на `/accounts` |
+| `/accounts` | `AccountsPage` | Список и управление счетами |
+| `/categories` | `CategoriesPage` | Список и управление категориями |
+| `/transactions` | `TransactionsPage` | История и управление транзакциями |
 
 #### Компоненты интерфейса
 
 | Компонент | Файл | Назначение |
 |---|---|---|
-| `App` | `App.jsx` | Корневой компонент, управление активной вкладкой, рендер навигации и активной страницы |
+| `App` | `App.jsx` | Корневой компонент, навигация через `NavLink`, объявление маршрутов `Routes` |
+| `Pagination` | `components/Pagination.jsx` | Переиспользуемая серверная пагинация: номера страниц, prev/next, выбор размера |
 | `AccountsPage` | `pages/AccountsPage.jsx` | Список счетов, форма создания/редактирования, удаление |
 | `CategoriesPage` | `pages/CategoriesPage.jsx` | Список категорий с фильтром по счёту, форма создания/редактирования |
 | `TransactionsPage` | `pages/TransactionsPage.jsx` | Список транзакций с фильтром, динамическая загрузка категорий, форма |
@@ -296,24 +311,32 @@ skinparam rectangle {
   BorderColor #4361ee
 }
 
+rectangle "BrowserRouter\n(main.jsx)" as BR
+rectangle "App.jsx\nNavLink + Routes" as App
 rectangle "Страницы (pages)\nAccountsPage, CategoriesPage,\nTransactionsPage" as Pages
-rectangle "Корневой компонент\nApp.jsx" as App
+rectangle "Pagination\n(components)" as Pag
 rectangle "API-слой\napi/api.js" as API
 rectangle "Сервер\n(Spring Boot)" as Server
 
-App --> Pages : рендер активной страницы
+BR --> App
+App --> Pages : <Route> match
+Pages --> Pag : props
 Pages --> API : вызовы функций
-API --> Server : fetch (HTTP/JSON)
+API --> Server : fetch (HTTP/JSON)\n?page=&size=
 @enduml
 ```
 
 *Рисунок 1.3.2 — Архитектура клиентской части*
 
-**Страницы (`pages`)** — самодостаточные React-компоненты, реализующие пользовательские сценарии. Каждая страница управляет собственным локальным состоянием (`useState`), загружает данные при монтировании (`useEffect`) и при изменении зависимостей (фильтр по счёту).
+**`BrowserRouter` (`main.jsx`)** — оборачивает приложение и предоставляет контекст History API для всех дочерних компонентов.
 
-**API-слой (`api/api.js`)** — единая точка сетевого взаимодействия. Содержит функции для всех операций CRUD по каждой сущности, инкапсулирует работу с `fetch`, базовый URL и обработку ошибок HTTP.
+**Корневой компонент (`App.jsx`)** — объявляет маршруты через `<Routes>` / `<Route>`, рендерит шапку с `<NavLink>` для навигации.
 
-**Корневой компонент (`App.jsx`)** — управляет навигацией (активной вкладкой) и рендерит шапку и активную страницу.
+**Страницы (`pages`)** — самодостаточные React-компоненты, реализующие пользовательские сценарии. Каждая страница управляет собственным локальным состоянием (`useState`), загружает данные при изменении зависимостей `page`, `pageSize`, `filterAccountId` через `useEffect`.
+
+**Пагинация (`components/Pagination.jsx`)** — переиспользуемый компонент. Принимает `page`, `totalItems`, `pageSize`, коллбэки `onPage` / `onPageSize`. Рендерит номера страниц с эллипсисом, кнопки prev/next и селект размера страницы.
+
+**API-слой (`api/api.js`)** — единая точка сетевого взаимодействия. Все запросы списков принимают параметры `page` и `size`, которые передаются как query-параметры. Инкапсулирует работу с `fetch`, базовый URL и обработку ошибок HTTP.
 
 ---
 
@@ -1754,39 +1777,62 @@ export const deleteTransaction = (id) =>
   request(`/transactions/${id}`, { method: 'DELETE' })
 ```
 
+#### `src/main.jsx`
+```jsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </StrictMode>,
+)
+```
+
 #### `src/App.jsx`
 ```jsx
-import { useState } from 'react'
+import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import AccountsPage from './pages/AccountsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import TransactionsPage from './pages/TransactionsPage'
 
 const TABS = [
-  { key: 'accounts', label: 'Счета' },
-  { key: 'categories', label: 'Категории' },
-  { key: 'transactions', label: 'Транзакции' },
+  { to: '/accounts', label: 'Счета' },
+  { to: '/categories', label: 'Категории' },
+  { to: '/transactions', label: 'Транзакции' },
 ]
 
 export default function App() {
-  const [tab, setTab] = useState('accounts')
   return (
     <div className="app">
       <header className="app-header">
         <div className="app-title">Личный бюджет</div>
         <nav className="app-nav">
           {TABS.map(t => (
-            <button key={t.key}
-              className={`nav-btn${tab === t.key ? ' active' : ''}`}
-              onClick={() => setTab(t.key)}>
+            <NavLink key={t.to} to={t.to}
+              className={({ isActive }) =>
+                `nav-btn${isActive ? ' active' : ''}`}>
               {t.label}
-            </button>
+            </NavLink>
           ))}
         </nav>
       </header>
       <main className="app-main">
-        {tab === 'accounts'     && <AccountsPage />}
-        {tab === 'categories'   && <CategoriesPage />}
-        {tab === 'transactions' && <TransactionsPage />}
+        <Routes>
+          <Route path="/"
+            element={<Navigate to="/accounts" replace />} />
+          <Route path="/accounts"
+            element={<AccountsPage />} />
+          <Route path="/categories"
+            element={<CategoriesPage />} />
+          <Route path="/transactions"
+            element={<TransactionsPage />} />
+        </Routes>
       </main>
     </div>
   )

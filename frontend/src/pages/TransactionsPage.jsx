@@ -19,10 +19,7 @@ export default function TransactionsPage() {
   const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
-    getAccounts(0, 1000).then(data => {
-      setAccounts(data.content)
-      if (data.content.length > 0) setFilterAccountId(String(data.content[0].id))
-    })
+    getAccounts(0, 1000).then(data => setAccounts(data.content))
   }, [])
 
   useEffect(() => {

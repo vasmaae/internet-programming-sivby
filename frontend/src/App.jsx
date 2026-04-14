@@ -1,37 +1,38 @@
-import { useState } from 'react'
+import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import AccountsPage from './pages/AccountsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import TransactionsPage from './pages/TransactionsPage'
 
 const TABS = [
-  { key: 'accounts', label: 'Счета' },
-  { key: 'categories', label: 'Категории' },
-  { key: 'transactions', label: 'Транзакции' },
+  { to: '/accounts', label: 'Счета' },
+  { to: '/categories', label: 'Категории' },
+  { to: '/transactions', label: 'Транзакции' },
 ]
 
 export default function App() {
-  const [tab, setTab] = useState('accounts')
-
   return (
     <div className="app">
       <header className="app-header">
         <div className="app-title">Личный бюджет</div>
         <nav className="app-nav">
           {TABS.map(t => (
-            <button
-              key={t.key}
-              className={`nav-btn${tab === t.key ? ' active' : ''}`}
-              onClick={() => setTab(t.key)}
+            <NavLink
+              key={t.to}
+              to={t.to}
+              className={({ isActive }) => `nav-btn${isActive ? ' active' : ''}`}
             >
               {t.label}
-            </button>
+            </NavLink>
           ))}
         </nav>
       </header>
       <main className="app-main">
-        {tab === 'accounts' && <AccountsPage />}
-        {tab === 'categories' && <CategoriesPage />}
-        {tab === 'transactions' && <TransactionsPage />}
+        <Routes>
+          <Route path="/" element={<Navigate to="/accounts" replace />} />
+          <Route path="/accounts" element={<AccountsPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/transactions" element={<TransactionsPage />} />
+        </Routes>
       </main>
     </div>
   )
