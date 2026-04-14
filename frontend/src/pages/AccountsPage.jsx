@@ -1,18 +1,29 @@
 import { useState, useEffect } from 'react'
 import { getAccounts, createAccount, updateAccount, deleteAccount } from '../api/api'
+import Pagination from '../components/Pagination'
 
 const EMPTY = { name: '', balance: '', currency: 'RUB' }
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState([])
+  const [total, setTotal] = useState(0)
   const [form, setForm] = useState(EMPTY)
   const [editId, setEditId] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    getAccounts(page - 1, pageSize)
+      .then(data => { setAccounts(data.content); setTotal(data.totalElements) })
+      .catch(() => {})
+  }, [page, pageSize])
 
-  const load = () => getAccounts().then(setAccounts).catch(() => {})
+  const reload = () =>
+    getAccounts(page - 1, pageSize)
+      .then(data => { setAccounts(data.content); setTotal(data.totalElements) })
+      .catch(() => {})
 
   const openCreate = () => { setForm(EMPTY); setEditId(null); setError(''); setShowForm(true) }
   const openEdit = (a) => {
@@ -28,7 +39,7 @@ export default function AccountsPage() {
       const body = { ...form, balance: parseFloat(form.balance) }
       if (editId) await updateAccount(editId, body)
       else await createAccount(body)
-      close(); load()
+      close(); reload()
     } catch (err) {
       setError(err.message)
     }
@@ -37,7 +48,7 @@ export default function AccountsPage() {
   const handleDelete = async (id) => {
     if (!confirm('Удалить счёт? Все категории и транзакции счёта также будут удалены.')) return
     await deleteAccount(id).catch(() => {})
-    load()
+    reload()
   }
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
@@ -78,38 +89,47 @@ export default function AccountsPage() {
       )}
 
       <div className="table-wrap">
-        {accounts.length === 0 ? (
+        {total === 0 && accounts.length === 0 ? (
           <div className="empty">Счетов нет. Добавьте первый счёт.</div>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Название</th>
-                <th>Баланс</th>
-                <th>Валюта</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map(a => (
-                <tr key={a.id}>
-                  <td>{a.name}</td>
-                  <td>
-                    <span className={a.balance >= 0 ? 'amount-income' : 'amount-expense'}>
-                      {Number(a.balance).toFixed(2)}
-                    </span>
-                  </td>
-                  <td>{a.currency}</td>
-                  <td>
-                    <div className="actions">
-                      <button className="btn-secondary btn-sm" onClick={() => openEdit(a)}>Изменить</button>
-                      <button className="btn-danger btn-sm" onClick={() => handleDelete(a.id)}>Удалить</button>
-                    </div>
-                  </td>
+          <>
+            <table>
+              <thead>
+                <tr>
+                  <th>Название</th>
+                  <th>Баланс</th>
+                  <th>Валюта</th>
+                  <th>Действия</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {accounts.map(a => (
+                  <tr key={a.id}>
+                    <td>{a.name}</td>
+                    <td>
+                      <span className={a.balance >= 0 ? 'amount-income' : 'amount-expense'}>
+                        {Number(a.balance).toFixed(2)}
+                      </span>
+                    </td>
+                    <td>{a.currency}</td>
+                    <td>
+                      <div className="actions">
+                        <button className="btn-secondary btn-sm" onClick={() => openEdit(a)}>Изменить</button>
+                        <button className="btn-danger btn-sm" onClick={() => handleDelete(a.id)}>Удалить</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Pagination
+              page={page}
+              totalItems={total}
+              pageSize={pageSize}
+              onPage={setPage}
+              onPageSize={(s) => { setPageSize(s); setPage(1) }}
+            />
+          </>
         )}
       </div>
     </div>

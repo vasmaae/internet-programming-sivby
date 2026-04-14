@@ -1,5 +1,6 @@
 package com.budget.service;
 
+import com.budget.dto.PageResponse;
 import com.budget.dto.TransactionRequest;
 import com.budget.dto.TransactionResponse;
 import com.budget.entity.Account;
@@ -10,31 +11,34 @@ import com.budget.exception.ResourceNotFoundException;
 import com.budget.repository.AccountRepository;
 import com.budget.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
+
+    private static final Sort DATE_DESC = Sort.by(Sort.Direction.DESC, "date");
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final AccountService accountService;
     private final CategoryService categoryService;
 
-    public List<TransactionResponse> findAll() {
-        return transactionRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<TransactionResponse> findAll(int page, int size) {
+        return PageResponse.of(
+                transactionRepository.findAll(PageRequest.of(page, size, DATE_DESC))
+                        .map(this::toResponse));
     }
 
-    public List<TransactionResponse> findByAccountId(Long accountId) {
-        return transactionRepository.findByAccountIdOrderByDateDesc(accountId).stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<TransactionResponse> findByAccountId(Long accountId, int page, int size) {
+        return PageResponse.of(
+                transactionRepository.findByAccountId(accountId, PageRequest.of(page, size, DATE_DESC))
+                        .map(this::toResponse));
     }
 
     public TransactionResponse findById(Long id) {

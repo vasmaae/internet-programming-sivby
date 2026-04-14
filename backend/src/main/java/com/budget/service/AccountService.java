@@ -2,14 +2,14 @@ package com.budget.service;
 
 import com.budget.dto.AccountRequest;
 import com.budget.dto.AccountResponse;
+import com.budget.dto.PageResponse;
 import com.budget.entity.Account;
 import com.budget.exception.ResourceNotFoundException;
 import com.budget.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,10 +17,10 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
 
-    public List<AccountResponse> findAll() {
-        return accountRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<AccountResponse> findAll(int page, int size) {
+        return PageResponse.of(
+                accountRepository.findAll(PageRequest.of(page, size))
+                        .map(this::toResponse));
     }
 
     public AccountResponse findById(Long id) {

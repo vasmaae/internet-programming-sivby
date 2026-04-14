@@ -2,13 +2,12 @@ package com.budget.controller;
 
 import com.budget.dto.AccountRequest;
 import com.budget.dto.AccountResponse;
+import com.budget.dto.PageResponse;
 import com.budget.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -18,8 +17,10 @@ public class AccountController {
     private final AccountService accountService;
 
     @GetMapping
-    public List<AccountResponse> getAll() {
-        return accountService.findAll();
+    public PageResponse<AccountResponse> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return accountService.findAll(page, size);
     }
 
     @GetMapping("/{id}")

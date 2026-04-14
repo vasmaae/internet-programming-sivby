@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { getAccounts, getCategories, getTransactions, createTransaction, updateTransaction, deleteTransaction } from '../api/api'
+import Pagination from '../components/Pagination'
 
 const today = () => new Date().toISOString().slice(0, 10)
 const EMPTY = { amount: '', description: '', date: today(), type: 'EXPENSE', accountId: '', categoryId: '' }
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState([])
+  const [total, setTotal] = useState(0)
   const [accounts, setAccounts] = useState([])
   const [categories, setCategories] = useState([])
   const [filterAccountId, setFilterAccountId] = useState('')
@@ -13,28 +15,40 @@ export default function TransactionsPage() {
   const [editId, setEditId] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
-    getAccounts().then(data => {
-      setAccounts(data)
-      if (data.length > 0) setFilterAccountId(String(data[0].id))
+    getAccounts(0, 1000).then(data => {
+      setAccounts(data.content)
+      if (data.content.length > 0) setFilterAccountId(String(data.content[0].id))
     })
   }, [])
 
-  useEffect(() => { loadTransactions() }, [filterAccountId])
+  useEffect(() => {
+    getTransactions(filterAccountId || null, page - 1, pageSize)
+      .then(data => { setTransactions(data.content); setTotal(data.totalElements) })
+      .catch(() => {})
+  }, [page, pageSize, filterAccountId])
 
   useEffect(() => {
     if (form.accountId) {
-      getCategories(form.accountId).then(all =>
-        setCategories(all.filter(c => c.type === form.type))
+      getCategories(form.accountId, 0, 1000).then(data =>
+        setCategories(data.content.filter(c => c.type === form.type))
       )
     } else {
       setCategories([])
     }
   }, [form.accountId, form.type])
 
-  const loadTransactions = () => {
-    getTransactions(filterAccountId || null).then(setTransactions).catch(() => {})
+  const reload = () =>
+    getTransactions(filterAccountId || null, page - 1, pageSize)
+      .then(data => { setTransactions(data.content); setTotal(data.totalElements) })
+      .catch(() => {})
+
+  const handleFilterChange = (value) => {
+    setFilterAccountId(value)
+    setPage(1)
   }
 
   const openCreate = () => {
@@ -71,9 +85,8 @@ export default function TransactionsPage() {
       }
       if (editId) await updateTransaction(editId, body)
       else await createTransaction(body)
-      close(); loadTransactions()
-      // Обновляем счета (балансы могли измениться)
-      getAccounts().then(setAccounts)
+      close(); reload()
+      getAccounts(0, 1000).then(data => setAccounts(data.content))
     } catch (err) {
       setError(err.message)
     }
@@ -82,15 +95,14 @@ export default function TransactionsPage() {
   const handleDelete = async (id) => {
     if (!confirm('Удалить транзакцию?')) return
     await deleteTransaction(id).catch(() => {})
-    loadTransactions()
-    getAccounts().then(setAccounts)
+    reload()
+    getAccounts(0, 1000).then(data => setAccounts(data.content))
   }
 
   const set = (field) => (e) => {
     const val = e.target.value
     setForm(f => {
       const next = { ...f, [field]: val }
-      // Сбрасываем категорию при смене типа или счёта
       if (field === 'type' || field === 'accountId') next.categoryId = ''
       return next
     })
@@ -116,7 +128,7 @@ export default function TransactionsPage() {
 
       <div className="filter-bar">
         <label>Счёт:</label>
-        <select value={filterAccountId} onChange={e => setFilterAccountId(e.target.value)} style={{ width: 200 }}>
+        <select value={filterAccountId} onChange={e => handleFilterChange(e.target.value)} style={{ width: 200 }}>
           <option value="">Все</option>
           {accounts.map(a => (
             <option key={a.id} value={a.id}>{a.name} ({Number(a.balance).toFixed(2)} {a.currency})</option>
@@ -177,44 +189,53 @@ export default function TransactionsPage() {
       )}
 
       <div className="table-wrap">
-        {transactions.length === 0 ? (
+        {total === 0 && transactions.length === 0 ? (
           <div className="empty">Транзакций нет.</div>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Дата</th>
-                <th>Сумма</th>
-                <th>Тип</th>
-                <th>Категория</th>
-                <th>Описание</th>
-                <th>Счёт</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map(t => (
-                <tr key={t.id}>
-                  <td>{t.date}</td>
-                  <td>{formatAmount(t)}</td>
-                  <td>
-                    <span className={`badge badge-${t.type === 'INCOME' ? 'income' : 'expense'}`}>
-                      {t.type === 'INCOME' ? 'Доход' : 'Расход'}
-                    </span>
-                  </td>
-                  <td>{t.categoryName || <span style={{ color: '#aaa' }}>—</span>}</td>
-                  <td>{t.description || <span style={{ color: '#aaa' }}>—</span>}</td>
-                  <td>{t.accountName}</td>
-                  <td>
-                    <div className="actions">
-                      <button className="btn-secondary btn-sm" onClick={() => openEdit(t)}>Изменить</button>
-                      <button className="btn-danger btn-sm" onClick={() => handleDelete(t.id)}>Удалить</button>
-                    </div>
-                  </td>
+          <>
+            <table>
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Сумма</th>
+                  <th>Тип</th>
+                  <th>Категория</th>
+                  <th>Описание</th>
+                  <th>Счёт</th>
+                  <th>Действия</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {transactions.map(t => (
+                  <tr key={t.id}>
+                    <td>{t.date}</td>
+                    <td>{formatAmount(t)}</td>
+                    <td>
+                      <span className={`badge badge-${t.type === 'INCOME' ? 'income' : 'expense'}`}>
+                        {t.type === 'INCOME' ? 'Доход' : 'Расход'}
+                      </span>
+                    </td>
+                    <td>{t.categoryName || <span style={{ color: '#aaa' }}>—</span>}</td>
+                    <td>{t.description || <span style={{ color: '#aaa' }}>—</span>}</td>
+                    <td>{t.accountName}</td>
+                    <td>
+                      <div className="actions">
+                        <button className="btn-secondary btn-sm" onClick={() => openEdit(t)}>Изменить</button>
+                        <button className="btn-danger btn-sm" onClick={() => handleDelete(t.id)}>Удалить</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Pagination
+              page={page}
+              totalItems={total}
+              pageSize={pageSize}
+              onPage={setPage}
+              onPageSize={(s) => { setPageSize(s); setPage(1) }}
+            />
+          </>
         )}
       </div>
     </div>

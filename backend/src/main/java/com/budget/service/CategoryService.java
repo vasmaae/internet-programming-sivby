@@ -2,16 +2,16 @@ package com.budget.service;
 
 import com.budget.dto.CategoryRequest;
 import com.budget.dto.CategoryResponse;
+import com.budget.dto.PageResponse;
 import com.budget.entity.Account;
 import com.budget.entity.Category;
 import com.budget.exception.ResourceNotFoundException;
 import com.budget.repository.CategoryRepository;
 import com.budget.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,16 +21,16 @@ public class CategoryService {
     private final TransactionRepository transactionRepository;
     private final AccountService accountService;
 
-    public List<CategoryResponse> findAll() {
-        return categoryRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<CategoryResponse> findAll(int page, int size) {
+        return PageResponse.of(
+                categoryRepository.findAll(PageRequest.of(page, size))
+                        .map(this::toResponse));
     }
 
-    public List<CategoryResponse> findByAccountId(Long accountId) {
-        return categoryRepository.findByAccountId(accountId).stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<CategoryResponse> findByAccountId(Long accountId, int page, int size) {
+        return PageResponse.of(
+                categoryRepository.findByAccountId(accountId, PageRequest.of(page, size))
+                        .map(this::toResponse));
     }
 
     public CategoryResponse findById(Long id) {

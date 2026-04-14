@@ -1,5 +1,6 @@
 package com.budget.controller;
 
+import com.budget.dto.PageResponse;
 import com.budget.dto.TransactionRequest;
 import com.budget.dto.TransactionResponse;
 import com.budget.service.TransactionService;
@@ -7,8 +8,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -18,11 +17,14 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @GetMapping
-    public List<TransactionResponse> getAll(@RequestParam(required = false) Long accountId) {
+    public PageResponse<TransactionResponse> getAll(
+            @RequestParam(required = false) Long accountId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         if (accountId != null) {
-            return transactionService.findByAccountId(accountId);
+            return transactionService.findByAccountId(accountId, page, size);
         }
-        return transactionService.findAll();
+        return transactionService.findAll(page, size);
     }
 
     @GetMapping("/{id}")

@@ -1,29 +1,42 @@
 import { useState, useEffect } from 'react'
-import { getAccounts } from '../api/api'
-import { getCategories, createCategory, updateCategory, deleteCategory } from '../api/api'
+import { getAccounts, getCategories, createCategory, updateCategory, deleteCategory } from '../api/api'
+import Pagination from '../components/Pagination'
 
 const EMPTY = { name: '', type: 'EXPENSE', accountId: '' }
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([])
+  const [total, setTotal] = useState(0)
   const [accounts, setAccounts] = useState([])
   const [filterAccountId, setFilterAccountId] = useState('')
   const [form, setForm] = useState(EMPTY)
   const [editId, setEditId] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
-    getAccounts().then(data => {
-      setAccounts(data)
-      if (data.length > 0) setFilterAccountId(String(data[0].id))
+    getAccounts(0, 1000).then(data => {
+      setAccounts(data.content)
+      if (data.content.length > 0) setFilterAccountId(String(data.content[0].id))
     })
   }, [])
 
-  useEffect(() => { load() }, [filterAccountId])
+  useEffect(() => {
+    getCategories(filterAccountId || null, page - 1, pageSize)
+      .then(data => { setCategories(data.content); setTotal(data.totalElements) })
+      .catch(() => {})
+  }, [page, pageSize, filterAccountId])
 
-  const load = () => {
-    getCategories(filterAccountId || null).then(setCategories).catch(() => {})
+  const reload = () =>
+    getCategories(filterAccountId || null, page - 1, pageSize)
+      .then(data => { setCategories(data.content); setTotal(data.totalElements) })
+      .catch(() => {})
+
+  const handleFilterChange = (value) => {
+    setFilterAccountId(value)
+    setPage(1)
   }
 
   const openCreate = () => {
@@ -43,7 +56,7 @@ export default function CategoriesPage() {
       const body = { ...form, accountId: Number(form.accountId) }
       if (editId) await updateCategory(editId, body)
       else await createCategory(body)
-      close(); load()
+      close(); reload()
     } catch (err) {
       setError(err.message)
     }
@@ -52,7 +65,7 @@ export default function CategoriesPage() {
   const handleDelete = async (id) => {
     if (!confirm('Удалить категорию?')) return
     await deleteCategory(id).catch(() => {})
-    load()
+    reload()
   }
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
@@ -68,7 +81,7 @@ export default function CategoriesPage() {
 
       <div className="filter-bar">
         <label>Счёт:</label>
-        <select value={filterAccountId} onChange={e => setFilterAccountId(e.target.value)} style={{ width: 200 }}>
+        <select value={filterAccountId} onChange={e => handleFilterChange(e.target.value)} style={{ width: 200 }}>
           <option value="">Все</option>
           {accounts.map(a => (
             <option key={a.id} value={a.id}>{a.name}</option>
@@ -112,38 +125,47 @@ export default function CategoriesPage() {
       )}
 
       <div className="table-wrap">
-        {categories.length === 0 ? (
+        {total === 0 && categories.length === 0 ? (
           <div className="empty">Категорий нет.</div>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Название</th>
-                <th>Тип</th>
-                <th>Счёт</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categories.map(c => (
-                <tr key={c.id}>
-                  <td>{c.name}</td>
-                  <td>
-                    <span className={`badge badge-${c.type === 'INCOME' ? 'income' : 'expense'}`}>
-                      {c.type === 'INCOME' ? 'Доход' : 'Расход'}
-                    </span>
-                  </td>
-                  <td>{c.accountName}</td>
-                  <td>
-                    <div className="actions">
-                      <button className="btn-secondary btn-sm" onClick={() => openEdit(c)}>Изменить</button>
-                      <button className="btn-danger btn-sm" onClick={() => handleDelete(c.id)}>Удалить</button>
-                    </div>
-                  </td>
+          <>
+            <table>
+              <thead>
+                <tr>
+                  <th>Название</th>
+                  <th>Тип</th>
+                  <th>Счёт</th>
+                  <th>Действия</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {categories.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.name}</td>
+                    <td>
+                      <span className={`badge badge-${c.type === 'INCOME' ? 'income' : 'expense'}`}>
+                        {c.type === 'INCOME' ? 'Доход' : 'Расход'}
+                      </span>
+                    </td>
+                    <td>{c.accountName}</td>
+                    <td>
+                      <div className="actions">
+                        <button className="btn-secondary btn-sm" onClick={() => openEdit(c)}>Изменить</button>
+                        <button className="btn-danger btn-sm" onClick={() => handleDelete(c.id)}>Удалить</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Pagination
+              page={page}
+              totalItems={total}
+              pageSize={pageSize}
+              onPage={setPage}
+              onPageSize={(s) => { setPageSize(s); setPage(1) }}
+            />
+          </>
         )}
       </div>
     </div>

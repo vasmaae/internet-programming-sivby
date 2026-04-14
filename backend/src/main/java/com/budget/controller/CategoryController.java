@@ -2,13 +2,12 @@ package com.budget.controller;
 
 import com.budget.dto.CategoryRequest;
 import com.budget.dto.CategoryResponse;
+import com.budget.dto.PageResponse;
 import com.budget.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -18,11 +17,14 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public List<CategoryResponse> getAll(@RequestParam(required = false) Long accountId) {
+    public PageResponse<CategoryResponse> getAll(
+            @RequestParam(required = false) Long accountId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         if (accountId != null) {
-            return categoryService.findByAccountId(accountId);
+            return categoryService.findByAccountId(accountId, page, size);
         }
-        return categoryService.findAll();
+        return categoryService.findAll(page, size);
     }
 
     @GetMapping("/{id}")
