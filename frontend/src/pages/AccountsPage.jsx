@@ -59,8 +59,9 @@ export default function AccountsPage() {
                 <input value={form.name} onChange={set('name')} required placeholder="Например: Основная карта" />
               </div>
               <div className="form-field">
-                <label>Начальный баланс *</label>
-                <input type="number" step="0.01" value={form.balance} onChange={set('balance')} required placeholder="0.00" />
+                <label>{editId ? 'Баланс' : 'Начальный баланс *'}</label>
+                <input type="number" step="0.01" value={form.balance} onChange={set('balance')} required placeholder="0.00" disabled={!!editId} />
+                {editId && <small style={{ color: '#999' }}>Баланс изменяется через транзакции</small>}
               </div>
               <div className="form-field">
                 <label>Валюта *</label>
